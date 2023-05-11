@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Project Agapanthus: CFN Template To Create an IAM Role For Glue Catalog. 
+
+Metadata:
+  TemplateName: glue-iam-role-stack.yaml
+  TemplateType: Glue Database
+  Version: 1.0.0
+  Owner: Subhamay Bhattacharyya
+  ProjectName: Agapanthus
+  Modification History: 
+    - 1.0.0  - May 10, 2023   -- Initial Version.
+    
+  Resources: 
+    - IAM Role for Glue Catalog
+  StepsToTest: |
+    Manualy verify the Stack.
+  StepsToCleanup: |
+    Stack delete command
+
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    #################################### Project Name and Environment ##############################
+    - Label: 
+        default: "Project And Environment:"
+      Parameters: 
+      - ProjectName
+      - Environment
+    #################################### Glue IAM Role #############################################
+    - Label:
+        default: "Glue IAM Configuration:"
+      Parameters:
+      - GlueIAMRoleName
+      - GlueIAMPolicyName
+    ParameterLabels:
+      ################################## Project Name and Environment ##############################
+    - Label: 
+        default: "Project And Environment:"
+      ProjectName:
+        default: "Project Name."
+      Environment:
+        default: "Environment Name."
+    #################################### Glue IAM Role #############################################
+    - Label:
+        default: "Glue IAM Role Configuration:"
+      GlueIAMRoleName:
+        default: "Glue IAM Role Name."
+      GlueIAMPolicyName:
+        default: "Glue IAM Policy Name."
+Parameters:
+  ###################################### Project Name and Environment ##############################
+  ProjectName:
+    Default: project
+    Description: "The Project Name."
+    Type: String
+    MinLength: 5
+    MaxLength: 30
+    AllowedPattern: "[a-z]*"
+    ConstraintDescription: "The length should be between 5 and 30, must contain only lowercase alphabets."
+  Environment:
+    Default: devl
+    Description: "The Environment Name."
+    Type: String
+    AllowedValues: ["devl", "test", "prod"]
+    ConstraintDescription: "The Environment must be devl / test or prod" 
+  ###################################### Glue IAM Role #############################################
+  GlueIAMRoleName:
+    Default: agapanthus-glue-iam-role
+    Description: "The IAM Role Name To Be Used By Glue."
+    Type: String
+    MinLength: 10
+    MaxLength: 40
+    AllowedPattern: "[a-z][a-z0-9-.]*"
+    ConstraintDescription: "The length should be between 10 and 40, must contain only lowercase letter,numbers,dash, dot and should start with a letter."
+  GlueIAMPolicyName:
+    Default: agapanthus-glue-iam-policy
+    Description: "The IAM Policy Name To Be Used By Glue."
+    Type: String
+    MinLength: 10
+    MaxLength: 40
+    AllowedPattern: "[a-z][a-z0-9-.]*"
+    ConstraintDescription: "The length should be between 10 and 40, must contain only lowercase letter,numbers,dash, dot and should start with a letter."
+Resources:
+  ###################################### IAM Role ##################################################
+  GlueIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref GlueIAMRoleName
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "glue.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: !Ref GlueIAMPolicyName
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action: "*"
+                Resource: "*"
+      Tags:
+        - Key: ProjectName
+          Value: !Ref ProjectName
+        - Key:  Environment
+          Value: !Ref Environment
+Outputs:
+  GlueIAMRoleArn:
+    Description: The Arn Of The Glue IAM Role.
+    Value: !GetAtt GlueIAMRole.Arn
+
